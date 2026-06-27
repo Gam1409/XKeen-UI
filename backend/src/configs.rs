@@ -353,6 +353,14 @@ pub async fn patch_config(State(state): State<AppState>, Json(req): Json<RenameR
     })
 }
 
+pub async fn validate_core_files(core: &str, files: Vec<(String, String)>) -> Result<(), String> {
+    let validate_files = files
+        .into_iter()
+        .map(|(file, content)| ConfigReq { file, content })
+        .collect::<Vec<_>>();
+    validate_core(core, &validate_files).await
+}
+
 async fn validate_core(core: &str, files: &[ConfigReq]) -> Result<(), String> {
     let temp_dir = std::env::temp_dir().join(format!(
         "xkeen-validate-{}-{}",
@@ -376,7 +384,12 @@ async fn validate_core(core: &str, files: &[ConfigReq]) -> Result<(), String> {
 
     let mut command = match core {
         "mihomo" => {
-            let mut cmd = tokio::process::Command::new("mihomo");
+            let binary = if Path::new("/opt/sbin/mihomo").exists() {
+                "/opt/sbin/mihomo"
+            } else {
+                "mihomo"
+            };
+            let mut cmd = tokio::process::Command::new(binary);
             cmd.args(["-t", "-f"]).arg(temp_dir.join("config.yaml"));
             cmd.env("CLASH_HOME_DIR", MIHOMO_CONF);
             cmd

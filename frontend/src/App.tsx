@@ -5,6 +5,7 @@ import type { CodeMirrorRef } from './components/configuration/CodeMirror'
 import { ConfigPanel } from './components/configuration/ConfigPanel'
 import { LogPanel } from './components/log/LogPanel'
 import { StatusBar } from './components/status/StatusBar'
+import { Button } from './components/ui/button'
 import { Toast } from './components/ui/toast'
 import { apiCall, capitalize } from './lib/api'
 import { LazyBoundary, lazyLoad, useLazyMount } from './lib/loader'
@@ -12,6 +13,7 @@ import { fetchClashProxies, getAppState, syncClashApiPort, useAppActions, useMod
 import { applyTheme, THEME_MEDIA_QUERY } from './lib/theme'
 import { DEFAULT_PING_TEST_TIMEOUT, DEFAULT_PING_TEST_URL, type Config, type ThemeMode } from './lib/types'
 import { parseClashApiCredentials } from './lib/utils'
+import { IconFileCode, IconRepeat } from '@tabler/icons-react'
 import { parse as parseJsonc } from 'jsonc-parser'
 
 const CommentsWarningModal = lazyLoad(() => import('./components/modals/CommentsWarning'), 'CommentsWarningModal')
@@ -21,6 +23,7 @@ const ImportModal = lazyLoad(() => import('./components/modals/AddProxy'), 'Impo
 const TemplateModal = lazyLoad(() => import('./components/modals/Templates'), 'TemplateModal')
 const SettingsModal = lazyLoad(() => import('./components/modals/Settings'), 'SettingsModal')
 const GeoScanModal = lazyLoad(() => import('./components/modals/GeoScan'), 'GeoScanModal')
+const SubscriptionsPanel = lazyLoad(() => import('./components/subscriptions/SubscriptionsPanel'), 'SubscriptionsPanel')
 
 function useThemeMode(theme: ThemeMode) {
   useEffect(() => {
@@ -112,6 +115,7 @@ const ModalManager = memo(function ModalManager({
 function AppContent({ onLogout }: { onLogout: () => void }) {
   const { dispatch, showToast } = useAppActions()
   const editorRef = useRef<CodeMirrorRef | null>(null)
+  const [activeSection, setActiveSection] = useState<'configs' | 'subscriptions'>('configs')
   const configActionsRef = useRef<{ switchTab: (index: number) => void; getActiveIndex: () => number }>({
     switchTab: () => { },
     getActiveIndex: () => 0,
@@ -421,15 +425,31 @@ function AppContent({ onLogout }: { onLogout: () => void }) {
             }}
             onLogout={logout}
           />
-          <ConfigPanel
-            editorRef={editorRef}
-            configActionsRef={configActionsRef}
-            onOpenImport={() => openModal('showImportModal')}
-            onOpenTemplate={() => openModal('showTemplateModal')}
-            onOpenGeoScan={() => openModal('showGeoScanModal')}
-            onRefreshConfigs={() => loadConfigs(undefined, false, true)}
-          />
-          <LogPanel />
+          <div className="flex flex-wrap gap-1.5">
+            <Button variant={activeSection === 'configs' ? 'default' : 'outline'} onClick={() => setActiveSection('configs')}>
+              <IconFileCode data-icon="inline-start" /> Конфигурация
+            </Button>
+            <Button variant={activeSection === 'subscriptions' ? 'default' : 'outline'} onClick={() => setActiveSection('subscriptions')}>
+              <IconRepeat data-icon="inline-start" /> Подписки
+            </Button>
+          </div>
+          {activeSection === 'configs' ? (
+            <>
+              <ConfigPanel
+                editorRef={editorRef}
+                configActionsRef={configActionsRef}
+                onOpenImport={() => openModal('showImportModal')}
+                onOpenTemplate={() => openModal('showTemplateModal')}
+                onOpenGeoScan={() => openModal('showGeoScanModal')}
+                onRefreshConfigs={() => loadConfigs(undefined, false, true)}
+              />
+              <LogPanel />
+            </>
+          ) : (
+            <LazyBoundary>
+              <SubscriptionsPanel />
+            </LazyBoundary>
+          )}
         </div>
       </main>
       <Toast />

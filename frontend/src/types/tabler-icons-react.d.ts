@@ -1,0 +1,66 @@
+declare module '@tabler/icons-react' {
+  import type * as React from 'react'
+
+  export type TablerIcon = React.FC<React.SVGProps<SVGSVGElement> & { size?: number | string }>
+
+  export const IconActivity: TablerIcon
+  export const IconAlertCircle: TablerIcon
+  export const IconAlertTriangle: TablerIcon
+  export const IconArrowDown: TablerIcon
+  export const IconArrowRight: TablerIcon
+  export const IconArrowsSort: TablerIcon
+  export const IconArrowUp: TablerIcon
+  export const IconBoltFilled: TablerIcon
+  export const IconBox: TablerIcon
+  export const IconBoxOff: TablerIcon
+  export const IconCheck: TablerIcon
+  export const IconChevronDown: TablerIcon
+  export const IconChevronRight: TablerIcon
+  export const IconChevronUp: TablerIcon
+  export const IconCircleArrowRightFilled: TablerIcon
+  export const IconCircleCheck: TablerIcon
+  export const IconClock: TablerIcon
+  export const IconCode: TablerIcon
+  export const IconCopy: TablerIcon
+  export const IconCpu: TablerIcon
+  export const IconDatabase: TablerIcon
+  export const IconDeviceFloppy: TablerIcon
+  export const IconDotsFilled: TablerIcon
+  export const IconDotsVertical: TablerIcon
+  export const IconDownload: TablerIcon
+  export const IconEdit: TablerIcon
+  export const IconExternalLinkFilled: TablerIcon
+  export const IconEye: TablerIcon
+  export const IconEyeOff: TablerIcon
+  export const IconFile: TablerIcon
+  export const IconFileCode: TablerIcon
+  export const IconFilePlus: TablerIcon
+  export const IconFileText: TablerIcon
+  export const IconFilter: TablerIcon
+  export const IconGripVertical: TablerIcon
+  export const IconLink: TablerIcon
+  export const IconListDetails: TablerIcon
+  export const IconLoader2: TablerIcon
+  export const IconLock: TablerIcon
+  export const IconLogout: TablerIcon
+  export const IconMaximize: TablerIcon
+  export const IconMinimize: TablerIcon
+  export const IconPencil: TablerIcon
+  export const IconPlayerPlay: TablerIcon
+  export const IconPlayerPlayFilled: TablerIcon
+  export const IconPlayerStopFilled: TablerIcon
+  export const IconPlaylistX: TablerIcon
+  export const IconPlugX: TablerIcon
+  export const IconPlus: TablerIcon
+  export const IconRefresh: TablerIcon
+  export const IconRepeat: TablerIcon
+  export const IconRestore: TablerIcon
+  export const IconSearch: TablerIcon
+  export const IconSelector: TablerIcon
+  export const IconServer: TablerIcon
+  export const IconSettings: TablerIcon
+  export const IconStack2: TablerIcon
+  export const IconTrash: TablerIcon
+  export const IconWorld: TablerIcon
+  export const IconX: TablerIcon
+}

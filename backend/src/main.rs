@@ -8,6 +8,7 @@ mod geo;
 mod logger;
 mod ruleset_inspector;
 mod settings;
+mod subscriptions;
 mod types;
 mod updater;
 mod version;
@@ -25,7 +26,7 @@ use std::io::{self, Write};
 use std::net::SocketAddr;
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
-use std::process::{exit};
+use std::process::exit;
 use std::sync::{Arc, RwLock};
 use tokio::sync::broadcast;
 use tower_http::cors::CorsLayer;
@@ -68,6 +69,16 @@ enum Command {
     Status,
     /// Сбросить пароль и перезапустить сервис (трeбуется init скрипт)
     ResetPassword,
+    /// Обновить подписку из cron/helper
+    SubscriptionUpdate {
+        id: Option<String>,
+        #[arg(long)]
+        all: bool,
+        #[arg(long)]
+        dry_run: bool,
+        #[arg(long)]
+        no_restart: bool,
+    },
     /// Запустить установочный скрипт
     Setup,
 }
@@ -118,7 +129,12 @@ fn setup_process_logging() {
 
     if !stdio_is_interactive() {
         if let Err(e) = redirect_stderr_to_process_log() {
-            eprintln!("{} {}: {}", " Не удалось перенаправить stderr в".red().bold(), XKEEN_UI_LOG, e);
+            eprintln!(
+                "{} {}: {}",
+                " Не удалось перенаправить stderr в".red().bold(),
+                XKEEN_UI_LOG,
+                e
+            );
         }
     }
 }
@@ -259,8 +275,7 @@ async fn main() {
     }
 
     let version: &'static str = Box::leak(format!("{} ({})", VERSION, get_arch()).into_boxed_str());
-    let mut command = <Cli as clap::CommandFactory>::command()
-        .version(version);
+    let mut command = <Cli as clap::CommandFactory>::command().version(version);
 
     if std::env::args().any(|arg| arg == "-h" || arg == "--help") {
         command.print_help().unwrap();
@@ -352,6 +367,21 @@ async fn main() {
                 println!("\n{} пароль сброшен\n", " Успех:".green().bold());
                 exit(0);
             }
+            Command::SubscriptionUpdate {
+                id,
+                all,
+                dry_run,
+                no_restart,
+            } => {
+                setup_process_logging();
+                match subscriptions::run_cli_update(id, all, dry_run, no_restart).await {
+                    Ok(()) => {
+                        println!("{}", " Успех: подписки обновлены".green().bold());
+                        exit(0);
+                    }
+                    Err(e) => report_process_error(&format!("Ошибка обновления подписок: {e}")),
+                }
+            }
         }
     }
 
@@ -435,6 +465,30 @@ async fn main() {
         .route(
             "/api/settings",
             get(settings::get_settings).patch(settings::patch_settings),
+        )
+        .route(
+            "/api/subscriptions",
+            get(subscriptions::list_subscriptions).post(subscriptions::create_subscription),
+        )
+        .route("/api/subscriptions/update-all", post(subscriptions::update_all))
+        .route("/api/subscriptions/schedules", get(subscriptions::get_schedules))
+        .route(
+            "/api/subscriptions/{id}",
+            get(subscriptions::get_subscription)
+                .put(subscriptions::update_subscription)
+                .delete(subscriptions::delete_subscription),
+        )
+        .route("/api/subscriptions/{id}/check", post(subscriptions::check_subscription))
+        .route(
+            "/api/subscriptions/{id}/preview",
+            get(subscriptions::preview_subscription),
+        )
+        .route("/api/subscriptions/{id}/update", post(subscriptions::update_now))
+        .route("/api/subscriptions/{id}/rollback", post(subscriptions::rollback_update))
+        .route("/api/subscriptions/{id}/log", get(subscriptions::get_subscription_log))
+        .route(
+            "/api/subscriptions/{id}/schedule",
+            post(subscriptions::set_schedule).delete(subscriptions::delete_schedule),
         )
         .route("/api/version", get(version::version_handler))
         .route("/api/ruleset", get(ruleset_inspector::get_ruleset_content))

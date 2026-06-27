@@ -8,6 +8,7 @@ config.json
 *.bak
 *.tmp
 .zed
+.codex
 target
 Cargo.lock
 .agents

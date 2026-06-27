@@ -18,6 +18,12 @@ pub const XKEEN_UI_LOG: &str = "/opt/var/log/xkeen-ui.log";
 pub const S99XKEEN: &str = "/opt/etc/init.d/S99xkeen";
 pub const S99XKEEN_UI: &str = "/opt/etc/init.d/S99xkeen-ui";
 pub const S24XRAY: &str = "/opt/etc/init.d/S24xray";
+pub const SUBSCRIPTION_STORE: &str = "/opt/etc/xkeen/subscriptions.json";
+pub const SUBSCRIPTION_LOG_DIR: &str = "/opt/var/log/xkeen-ui/subscriptions";
+pub const SUBSCRIPTION_BACKUP_DIR: &str = "/opt/etc/xkeen/backups/subscriptions";
+pub const SUBSCRIPTION_LOCK: &str = "/opt/var/run/xkeen-ui-subscriptions.lock";
+pub const WATCHER_BINARY: &str = "/opt/sbin/xkeen-subscription-watcher";
+pub const MIHOMO_BINARY: &str = "/opt/sbin/mihomo";
 
 pub type GeoCache = std::collections::HashMap<String, (std::time::SystemTime, bool, bool)>;
 
@@ -198,6 +204,34 @@ pub struct AppendConfigPaths {
     pub mihomo: Vec<String>,
 }
 
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(default)]
+pub struct SubscriptionSettings {
+    pub store_path: String,
+    pub log_dir: String,
+    pub backup_dir: String,
+    pub watcher_binary_path: String,
+    pub xray_config_dir: String,
+    pub mihomo_config_path: String,
+    pub mihomo_binary_path: String,
+    pub lock_path: String,
+}
+
+impl Default for SubscriptionSettings {
+    fn default() -> Self {
+        Self {
+            store_path: SUBSCRIPTION_STORE.into(),
+            log_dir: SUBSCRIPTION_LOG_DIR.into(),
+            backup_dir: SUBSCRIPTION_BACKUP_DIR.into(),
+            watcher_binary_path: WATCHER_BINARY.into(),
+            xray_config_dir: XRAY_CONF.into(),
+            mihomo_config_path: format!("{MIHOMO_CONF}/config.yaml"),
+            mihomo_binary_path: MIHOMO_BINARY.into(),
+            lock_path: SUBSCRIPTION_LOCK.into(),
+        }
+    }
+}
+
 #[derive(Clone, Serialize, Default)]
 pub struct AppSettings {
     pub gui: GuiSettings,
@@ -205,6 +239,7 @@ pub struct AppSettings {
     pub log: LogSettings,
     pub clash_api: ClashApiSettings,
     pub append_config_paths: AppendConfigPaths,
+    pub subscriptions: SubscriptionSettings,
     pub auth: AuthSettings,
 }
 
@@ -226,6 +261,8 @@ impl<'de> Deserialize<'de> for AppSettings {
             #[serde(default)]
             append_config_paths: AppendConfigPaths,
             #[serde(default)]
+            subscriptions: SubscriptionSettings,
+            #[serde(default)]
             auth: AuthSettings,
             #[serde(rename = "timezoneOffset")]
             legacy_tz: Option<i32>,
@@ -240,6 +277,7 @@ impl<'de> Deserialize<'de> for AppSettings {
             log: raw.log,
             clash_api: raw.clash_api,
             append_config_paths: raw.append_config_paths,
+            subscriptions: raw.subscriptions,
             auth: raw.auth,
         })
     }
